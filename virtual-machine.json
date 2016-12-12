@@ -1,0 +1,50 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "sharedState": { 
+      "type": "object",
+      "metadata": {
+        "Description": "sharedState object"
+      }
+    },
+    "instanceNum": {
+      "type": "int",
+      "metadata": {
+        "Description": "Identifying number of the VM instance"
+      } 
+    }
+  },
+  "variables": {
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[concat(parameters('sharedState').resourcePrefix, parameters('sharedState').networkInterfacesName, parameters('instanceNum'))]",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "[parameters('sharedState').ApiVersion.network]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/virtualNetworks/', parameters('sharedState').virtualNetworkName)]",
+        "[concat('Microsoft.Network/networkSecurityGroups/', parameters('sharedState').networkSecurityGroupName)]"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "[concat(parameters('sharedState').resourcePrefix, parameters('instanceNum'), 'ipc')]",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[parameters('sharedState').subnetRef]"
+              }
+            }
+          }
+        ],
+        "networkSecurityGroup": {
+          "id": "[resourceId('pringl', 'Microsoft.Network/networkSecurityGroups', parameters('sharedState').networkSecurityGroupName)]"
+        }
+      }
+    }
+  ],
+  "outputs": {
+  }
+}

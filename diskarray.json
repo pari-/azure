@@ -1,0 +1,39 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "vmName": {
+      "type": "string"
+    },
+    "storageAccountName": {
+      "type": "string"
+    },
+    "numDataDisks": {
+      "type": "int",
+      "maxValue": 16,
+      "metadata": {
+        "description": "This parameter allows the user to select the number of disks they want"
+      }
+    }
+  },
+  "variables": {
+    "diskArray": [
+      {
+	"name": "[concat(parameters('vmName'), '-datadisk1')]",
+        "diskSizeGB": "1000",
+        "lun": 0,
+        "vhd": {
+          "uri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', concat(variables('resourcePrefix'), parameters('vmName'), 'sa')), '2016-01-01').primaryEndpoints.blob, 'vhds','/', 'dataDisk1VhdName','.vhd')]"
+        },
+        "createOption": "Empty"
+      }
+    ]
+  },
+  "resources": [],
+  "outputs": {
+    "result": {
+      "type": "array",
+      "value": "[take(variables('diskArray'),parameters('numDataDisks'))]"
+    }
+  }
+}

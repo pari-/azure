@@ -1,0 +1,71 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+  },
+  "variables": {
+    "staticIdentifier": "pari",
+    "resourcePrefix": "[toLower(substring(uniqueString(concat(variables('staticIdentifier'), resourceGroup().id)), 0, 5))]",
+    "instanceCount": 2,
+    "sharedState": {
+      "apiVersion": {
+        "compute": "2016-03-30",
+        "network": "2016-03-30",
+        "storage": "2015-06-15"
+      },
+      "virtualNetworkName": "[toLower(concat(variables('resourcePrefix'), 'vnet'))]",
+      "addressPrefix": "10.0.0.0/16",
+      "subnetName": "[toLower(concat(variables('resourcePrefix'), 'subnet'))]",
+      "subnetPrefix": "10.0.0.0/24",
+      "networkSecurityGroupName": "[toLower(concat(variables('resourcePrefix'), 'defaultNSG'))]",
+      "networkInterfacesName": "netif",
+      "adminUserName": "",
+      "adminPassword": ""
+    }
+  },
+  "resources": [
+    { 
+      "apiVersion": "2015-01-01", 
+      "name": "[toLower(concat(variables('resourcePrefix'), 'ltsr'))]",
+      "type": "Microsoft.Resources/deployments", 
+      "properties": { 
+        "mode": "incremental", 
+        "templateLink": {
+          "uri": "[uri(deployment().properties.templateLink.uri, 'shared-resources.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+	  "sharedState": {
+	    "value": "[variables('sharedState')]"
+	  }
+        } 
+      }
+    }, 
+    { 
+      "apiVersion": "2015-01-01", 
+      "name": "[toLower(concat(variables('resourcePrefix'), 'ltvm', copyIndex()))]",
+      "copy": {
+        "name": "virtual-machine-loop",
+	"count": "[variables('instanceCount')]"
+      },
+      "type": "Microsoft.Resources/deployments", 
+      "properties": { 
+        "mode": "incremental", 
+        "templateLink": {
+          "uri": "[uri(deployment().properties.templateLink.uri, 'virtual-machine.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+	  "sharedState": {
+	    "value": "[variables('sharedState')]"
+	  },
+	  "instanceNum": {
+            "value": "[concat('', copyIndex())]"
+	  }
+        } 
+      }
+    } 
+  ],
+  "outputs": {
+  }
+}
